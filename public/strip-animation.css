@@ -1,0 +1,22 @@
+/* Not processed by Vite minify: keeps translate3d() at both keyframe ends for smooth interpolation. */
+@keyframes strip-scroll {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.animate-strip-scroll {
+  animation: strip-scroll 40s linear infinite;
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-strip-scroll {
+    animation-duration: 120s !important;
+  }
+}
