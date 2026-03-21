@@ -1,6 +1,11 @@
 import { type ReactNode, useState } from "react";
 import { ScrollReveal } from "./components/ScrollReveal";
 
+/** 表示用: 画像ファイル名の `vip-` を出さない（実ファイルパスはそのまま） */
+function displayPhotoFileName(fileName: string): string {
+  return fileName.replace(/^vip-/i, "");
+}
+
 function IconCamera({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
@@ -62,11 +67,21 @@ function PlaceholderFrame({
       )}
       <span className="absolute bottom-2 left-2 right-2 z-[2] rounded border border-navy/10 bg-white/90 px-2 py-1 text-[9px] font-medium leading-tight text-navy/70">
         <span className="block text-[8px] font-semibold uppercase tracking-wider text-navy/45">PHOTO</span>
-        {fileName ? <span className="mt-0.5 block font-mono text-[9px] text-navy/90">{fileName}</span> : null}
+        {fileName ? (
+          <span className="mt-0.5 block font-mono text-[9px] text-navy/90">{displayPhotoFileName(fileName)}</span>
+        ) : null}
       </span>
     </div>
   );
 }
+
+/** spLandscape 時の高さ（index.css の .fb-sp-* で定義。Tailwind の動的クラスに依存しない） */
+const FB_SP_LANDSCAPE: Record<string, string> = {
+  "min-h-[55vh]": "fb-sp-55",
+  "min-h-[68vh]": "fb-sp-68",
+  "min-h-[72vh]": "fb-sp-72",
+  "min-h-full": "fb-sp-full",
+};
 
 /**
  * 画面いっぱいの写真エリア（ミキ／ディズニーLPの全面ビジュアル風）
@@ -81,6 +96,8 @@ function FullBleedPlaceholder({
   bleed = true,
   className = "",
   priority = false,
+  /** true: max-lg は 4:3 横長、lg 以上は minHeight どおり */
+  spLandscape = false,
 }: {
   variant?: "light" | "dark";
   minHeight?: string;
@@ -94,6 +111,7 @@ function FullBleedPlaceholder({
   className?: string;
   /** ファーストビュー向け（eager / fetchPriority） */
   priority?: boolean;
+  spLandscape?: boolean;
 }) {
   /** 0: /images/name, 1: /name（public 直下） */
   const [srcAttempt, setSrcAttempt] = useState(0);
@@ -103,9 +121,10 @@ function FullBleedPlaceholder({
       ? "from-[#1a1f2e] via-[#121826] to-navy-deep"
       : "from-[#dfe6e9] via-sand to-[#cfd8dc]";
   const bleedCls = bleed ? "full-bleed" : "relative w-full";
+  const heightCls = spLandscape ? (FB_SP_LANDSCAPE[minHeight] ?? minHeight) : minHeight;
   const imgSrc = srcAttempt === 0 ? `/images/${fileName}` : `/${fileName}`;
   return (
-    <div className={`${bleedCls} relative ${minHeight} overflow-hidden ${className}`}>
+    <div className={`${bleedCls} relative ${heightCls} overflow-hidden ${className}`}>
       {!imgFailed ? (
         <img
           key={srcAttempt}
@@ -199,7 +218,7 @@ function AreaNav({ active }: { active: number }) {
 }
 
 /** 横スクロール帯の1枚。`public/images/{fileName}` → なければ `public/{fileName}`。どちらも無ければプレースホルダー。 */
-function StripSlideCard({ fileName, photoNote }: { fileName: string; photoNote: string }) {
+function StripSlideCard({ fileName }: { fileName: string }) {
   const [attempt, setAttempt] = useState(0);
   const [imgFailed, setImgFailed] = useState(false);
   const src = imgFailed ? null : attempt === 0 ? `/images/${fileName}` : `/${fileName}`;
@@ -226,10 +245,6 @@ function StripSlideCard({ fileName, photoNote }: { fileName: string; photoNote: 
         </div>
       ) : null}
       <div className="pointer-events-none absolute inset-0 z-[1] bg-[linear-gradient(145deg,rgba(255,255,255,0.35),transparent_45%)]" />
-      <div className="absolute bottom-0 left-0 right-0 z-[2] bg-gradient-to-t from-black/45 to-transparent px-3 pb-3 pt-10">
-        <p className="font-mono text-[9px] font-semibold text-amber-100/95 sm:text-[10px]">PHOTO · {fileName}</p>
-        <p className="mt-1 text-[10px] leading-snug text-white/90 sm:text-[11px]">{photoNote}</p>
-      </div>
     </div>
   );
 }
@@ -242,7 +257,7 @@ function AutoScrollPhotoStrip({
   slides,
   caption,
 }: {
-  slides: { fileName: string; photoNote: string }[];
+  slides: { fileName: string }[];
   caption: string;
 }) {
   if (slides.length === 0) return null;
@@ -252,7 +267,7 @@ function AutoScrollPhotoStrip({
       <div className="full-bleed isolate overflow-hidden border-y border-black/[0.06] [contain:paint]">
         <div className="flex w-max animate-strip-scroll">
           {loop.map((item, i) => (
-            <StripSlideCard key={`${item.fileName}-${i}`} fileName={item.fileName} photoNote={item.photoNote} />
+            <StripSlideCard key={`${item.fileName}-${i}`} fileName={item.fileName} />
           ))}
         </div>
       </div>
@@ -266,7 +281,7 @@ export default function App() {
     <div className="overflow-x-hidden">
       {/* トップバー */}
       <header className="fixed left-0 right-0 top-0 z-40 flex items-center justify-center border-b border-black/[0.06] bg-cream/90 px-4 py-3 backdrop-blur-md sm:justify-start">
-        <p className="font-display text-sm font-semibold tracking-wider text-navy">VIP TRIP</p>
+        <p className="font-display text-sm font-semibold tracking-wider text-navy">Da Nang Trip</p>
       </header>
 
       {/* ヒーロー：全面写真＋オーバーレイ（Welcome） */}
@@ -284,7 +299,7 @@ export default function App() {
                 <p className="font-en text-[clamp(1.85rem,7vw,3.25rem)] font-semibold leading-[1.1] text-white drop-shadow-[0_2px_24px_rgba(0,0,0,0.55)]">
                   Welcome to
                   <br />
-                  <span className="italic text-amber-100">Da Nang VIP</span>
+                  <span className="italic text-amber-100">Da Nang</span>
                 </p>
                 <h1 className="mx-auto mt-8 max-w-xl font-display text-[clamp(1.15rem,4vw,1.5rem)] font-bold leading-snug tracking-wide text-white drop-shadow-[0_2px_20px_rgba(0,0,0,0.5)]">
                   学生最後の夏、全力で楽しむ東南アジア旅行
@@ -308,7 +323,7 @@ export default function App() {
           overlay={
             <div className="mx-auto w-full max-w-lg px-3 text-center sm:px-5">
               <h2 className="font-display text-xl font-bold text-white [text-shadow:0_2px_12px_rgba(0,0,0,0.85),0_0_28px_rgba(0,0,0,0.5)] md:text-2xl">
-                VIP豪遊旅へようこそ
+                豪遊旅へようこそ
               </h2>
               <h3 className="mt-6 font-display text-lg font-semibold leading-snug text-white [text-shadow:0_2px_10px_rgba(0,0,0,0.8),0_0_20px_rgba(0,0,0,0.45)]">
                 そこにあるのは、
@@ -326,39 +341,21 @@ export default function App() {
       {/* ScrollReveal なし：親の translateY フェードと子の translateX が重なるとカクつきやすい */}
       <AutoScrollPhotoStrip
         slides={[
-          {
-            fileName: "vip-pool-strip-01.jpg",
-            photoNote: "プール俯瞰。タオル・ドリンク・青空。",
-          },
-          {
-            fileName: "vip-pool-strip-02.jpg",
-            photoNote: "デッキチェアとパラソル。昼のリゾート感。",
-          },
-          {
-            fileName: "vip-pool-strip-03.jpg",
-            photoNote: "プールサイドから海方向。ワイド。",
-          },
-          {
-            fileName: "vip-pool-strip-04.jpg",
-            photoNote: "インフィニティラインと波打ち際。",
-          },
-          {
-            fileName: "vip-pool-strip-05.jpg",
-            photoNote: "カクテルとサンセットの反射。",
-          },
-          {
-            fileName: "vip-pool-strip-06.jpg",
-            photoNote: "ナイトプール／照明と水面。",
-          },
+          { fileName: "vip-pool-strip-01.jpg" },
+          { fileName: "vip-pool-strip-02.jpg" },
+          { fileName: "vip-pool-strip-03.jpg" },
+          { fileName: "vip-pool-strip-04.jpg" },
+          { fileName: "vip-pool-strip-05.jpg" },
+          { fileName: "vip-pool-strip-06.jpg" },
         ]}
         caption="プールデッキのイメージ（6カットを横に流す）。リゾートの余裕と開放感。"
       />
 
       <ScrollReveal className="bg-cream">
         <div className="mx-auto max-w-xl px-4 py-14 sm:px-5">
-          <h3 className="font-display text-lg font-semibold leading-snug text-ink">
-            お財布を気にしすぎない、
-            <br />
+          <h3 className="text-center font-display text-lg font-semibold leading-snug text-ink">
+            <span>お財布を気にしすぎない、</span>
+            <br className="lg:hidden" />
             <span className="text-navy">「予算が読める」豪遊。</span>
           </h3>
           <p className="mt-4 text-left text-[15px] leading-[1.9] text-ink/80">
@@ -381,7 +378,7 @@ export default function App() {
 
         <AreaNav active={2} />
 
-        <div className="flex snap-x snap-mandatory items-stretch gap-5 overflow-x-auto px-5 pb-8 pt-2 hide-scrollbar lg:mx-auto lg:grid lg:max-w-6xl lg:grid-cols-3 lg:gap-6 lg:overflow-visible lg:px-6 lg:snap-none">
+        <div className="flex snap-x snap-mandatory snap-always items-stretch gap-5 overflow-x-auto scroll-pl-5 scroll-pr-5 px-5 pb-8 pt-2 hide-scrollbar lg:mx-auto lg:grid lg:max-w-6xl lg:grid-cols-3 lg:gap-6 lg:overflow-visible lg:px-6 lg:snap-none lg:scroll-p-0">
           <HighlightCard
             n="01"
             en="Five-Star Base"
@@ -423,9 +420,11 @@ export default function App() {
           <div className="px-6 pb-16 pt-24 text-center">
             <p className="font-en text-sm font-semibold uppercase tracking-[0.45em] text-amber-200/90">Legendary Journey</p>
             <h2 className="mx-auto mt-5 max-w-md font-display text-2xl font-bold leading-snug text-white drop-shadow-lg md:text-3xl">
-              忘れられない4日間に
-              <br />
-              かかる。
+              <span>忘れられない</span>
+              <br className="lg:hidden" />
+              <span>4日間に</span>
+              <br className="lg:hidden" />
+              <span>なる</span>
             </h2>
             <p className="mx-auto mt-5 max-w-sm text-sm leading-relaxed text-white/80">
               海・絶景・クラブ。写真で先に体験して、現地は余韻だけ持っていけばいい。
@@ -437,32 +436,25 @@ export default function App() {
       {/* 中間 Welcome：全面×2（旧2カラムをフルブリード化） */}
       <ScrollReveal className="bg-cream">
         <div className="mx-auto max-w-lg px-5 py-12 text-center">
-          <p className="font-en text-2xl font-semibold italic text-navy">Welcome to Da Nang VIP</p>
+          <p className="font-en text-2xl font-semibold italic text-navy">Welcome to Da Nang</p>
           <p className="mt-3 font-display text-base font-semibold text-ink">最高の4日間を、ここから始めよう。</p>
         </div>
       </ScrollReveal>
-      <FullBleedPlaceholder
-        variant="light"
-        minHeight="min-h-[62vh]"
-        fileName="vip-mid-night-city-pool.jpg"
-      />
-      <FullBleedPlaceholder
-        variant="light"
-        minHeight="min-h-[58vh]"
-        fileName="vip-mid-airport-arrival-sunset.jpg"
-      />
+      <FullBleedPlaceholder variant="light" minHeight="min-h-[68vh]" spLandscape fileName="vip-mid-night-city-pool.jpg" />
+      <FullBleedPlaceholder variant="light" minHeight="min-h-[68vh]" spLandscape fileName="vip-mid-airport-arrival-sunset.jpg" />
 
       {/* タイムライン */}
       <section id="itinerary" className="scroll-mt-16 bg-navy-deep">
         <ScrollReveal className="relative">
           <FullBleedPlaceholder
             variant="dark"
-            minHeight="min-h-[56vh]"
+            minHeight="min-h-[68vh]"
+            spLandscape
             fileName="vip-itinerary-section-bana-cable.jpg"
             overlay={
               <div className="px-5 pb-14 pt-20">
-                <p className="text-center font-en text-sm font-semibold uppercase tracking-[0.35em] text-gold/90">Itinerary</p>
-                <h2 id="timeline-heading" className="mt-4 text-center font-display text-2xl font-bold drop-shadow-md">
+                <p className="text-center font-en text-sm font-semibold uppercase tracking-[0.35em] text-white">Itinerary</p>
+                <h2 id="timeline-heading" className="mt-4 text-center font-display text-2xl font-bold text-white drop-shadow-md">
                   タイムライン（行程）
                 </h2>
                 <p className="mx-auto mt-4 max-w-md text-center text-sm leading-relaxed text-white/80">
@@ -575,6 +567,7 @@ export default function App() {
         <FullBleedPlaceholder
           variant="light"
           minHeight="min-h-[72vh]"
+          spLandscape
           fileName="vip-hotel-hero-room-view.jpg"
           overlay={
             <div className="px-6 pb-14 pt-24">
@@ -587,16 +580,8 @@ export default function App() {
             </div>
           }
         />
-        <FullBleedPlaceholder
-          variant="light"
-          minHeight="min-h-[55vh]"
-          fileName="vip-hotel-pool-edge.jpg"
-        />
-        <FullBleedPlaceholder
-          variant="light"
-          minHeight="min-h-[55vh]"
-          fileName="vip-hotel-room-three-beds.jpg"
-        />
+        <FullBleedPlaceholder variant="light" minHeight="min-h-[55vh]" spLandscape fileName="vip-hotel-pool-edge.jpg" />
+        <FullBleedPlaceholder variant="light" minHeight="min-h-[55vh]" spLandscape fileName="vip-hotel-room-three-beds.jpg" />
         <div className="mx-auto max-w-lg px-5 py-14">
           <p className="text-center text-sm leading-relaxed text-ink/70">
             最高の快適さと利便性を追求した拠点で、旅を満喫。
@@ -618,18 +603,18 @@ export default function App() {
         </div>
       </ScrollReveal>
 
-      {/* 予算：全面背景＋ガラスカード */}
-      <section className="relative min-h-[85vh]" id="budget">
-        <div className="absolute inset-0 z-0">
+      {/* 予算：全面背景＋ガラスカード（SP も absolute で背面に固定。画像はセクション高に追従） */}
+      <section className="relative min-h-0 bg-navy-deep lg:min-h-[85vh]" id="budget">
+        <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
           <FullBleedPlaceholder
             bleed={false}
             variant="dark"
             minHeight="min-h-full"
-            className="h-full min-h-[85vh]"
+            className="h-full min-h-full w-full"
             fileName="vip-budget-table-top-flatlay.jpg"
           />
         </div>
-        <div className="relative z-10 flex min-h-[85vh] items-center justify-center px-4 py-20">
+        <div className="relative z-10 flex min-h-0 items-center justify-center px-4 py-20 lg:min-h-[85vh]">
           <ScrollReveal className="w-full max-w-lg">
             <div className="rounded-2xl border border-white/15 bg-white/10 p-6 shadow-2xl backdrop-blur-md md:p-8">
               <p className="text-center font-en text-sm font-semibold uppercase tracking-[0.35em] text-amber-200/90">Budget</p>
@@ -642,13 +627,13 @@ export default function App() {
                     <p className="font-display text-3xl font-bold text-amber-100">約11.5万円</p>
                   </div>
                   <p className="max-w-[13rem] text-right text-xs font-semibold leading-snug text-amber-200">
-                    予算内＝ビール代が増える🔥
+                    予算内＝ビール代が増える
                   </p>
                 </div>
                 <BudgetRow label="航空券（目安）" pct={52} amount="6万" dark />
                 <BudgetRow label="ホテル（DLG・3泊）" pct={13} amount="1.5万" dark />
                 <BudgetRow label="食事・飲み（BBQ/クラブ等）" pct={17} amount="〜2万" dark />
-                <BudgetRow label="アクティビティ（バナ等）" pct={13} amount="〜1.5万" dark />
+                <BudgetRow label="アクティビティ（シュノーケリング等）" pct={13} amount="〜1.5万" dark />
                 <BudgetRow label="予備・交通・雑費" pct={5} amount="〜0.5万" dark accent />
                 <p className="mt-5 text-xs leading-relaxed text-white/55">
                   ※為替・予約時期で変動。最終は確定見積もりでロックしよう。
@@ -659,21 +644,28 @@ export default function App() {
         </div>
       </section>
 
-      {/* 締め：全面写真＋Welcome（著作表記まで同一ブロック）。下端までクリームが見えないよう min-h 確保 */}
-      <section className="relative min-h-[100dvh] bg-navy-deep">
-        <div className="absolute inset-0 z-0">
+      {/* 締め：全面写真＋Welcome（テキストは写真エリアの中央に重ねる） */}
+      <section className="relative bg-navy-deep lg:min-h-[100dvh]">
+        <div className="relative isolate w-full lg:min-h-[100dvh]">
           <FullBleedPlaceholder
             bleed={false}
             variant="dark"
             minHeight="min-h-full"
-            className="h-full min-h-[100dvh]"
+            className="h-auto min-h-0 lg:h-full lg:min-h-[100dvh]"
+            spLandscape
             fileName="vip-footer-group-celebration-wide.jpg"
           />
-        </div>
-        <div className="relative z-10 flex min-h-[100dvh] flex-col items-center justify-end bg-gradient-to-t from-black/80 via-black/40 to-transparent px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-24 text-center">
-          <p className="font-en text-2xl font-semibold italic text-white">Welcome to Da Nang VIP</p>
-          <p className="mt-2 font-display text-sm font-semibold text-white/90">この旅で、学生最後の夏を締めくくろう。</p>
-          <p className="mt-10 font-en text-[11px] tracking-widest text-white/50">Da Nang VIP · 2026</p>
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center px-5 text-center">
+            <p className="font-en text-2xl font-semibold italic text-white drop-shadow-[0_2px_28px_rgba(0,0,0,0.75)]">
+              Welcome to Da Nang
+            </p>
+            <p className="mt-3 max-w-md font-display text-sm font-semibold leading-relaxed text-white/95 drop-shadow-[0_2px_20px_rgba(0,0,0,0.7)]">
+              この旅で、学生最後の夏を締めくくろう。
+            </p>
+            <p className="mt-10 font-en text-[11px] tracking-widest text-white/55 drop-shadow-[0_1px_12px_rgba(0,0,0,0.6)]">
+              Da Nang · 2026
+            </p>
+          </div>
         </div>
       </section>
     </div>
@@ -698,7 +690,7 @@ function HighlightCard({
   photoComment: string;
 }) {
   return (
-    <article className="flex min-w-[88%] shrink-0 snap-center flex-col self-stretch sm:min-w-[300px] lg:min-w-0 lg:w-auto lg:max-w-none lg:shrink">
+    <article className="flex w-[calc(100vw-2.5rem)] min-w-[calc(100vw-2.5rem)] shrink-0 snap-start flex-col self-stretch lg:min-w-0 lg:w-auto lg:max-w-none lg:shrink">
       <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-black/[0.06] bg-white shadow-[0_24px_80px_-40px_rgba(15,31,53,0.35)]">
         <div className="relative shrink-0">
           <PlaceholderFrame aspect="aspect-[5/4]" fileName={photoFileName} />
@@ -711,7 +703,7 @@ function HighlightCard({
           <h3 className="mt-2 shrink-0 font-display text-lg font-bold text-navy">{title}</h3>
           <p className="mt-3 grow text-sm leading-relaxed text-ink/75">{body}</p>
           <p className="mt-3 shrink-0 text-[11px] leading-snug text-ink/45">
-            <span className="font-mono text-[10px] text-navy/70">PHOTO · {photoFileName}</span>
+            <span className="font-mono text-[10px] text-navy/70">PHOTO · {displayPhotoFileName(photoFileName)}</span>
             <span className="mt-1 block text-ink/40">{photoComment}</span>
           </p>
           <a
@@ -755,7 +747,8 @@ function DayBlock({
       <div id={id} className="scroll-mt-28">
         <FullBleedPlaceholder
           variant="dark"
-          minHeight="min-h-[72vh]"
+          minHeight="min-h-[68vh]"
+          spLandscape
           fileName={p1.file}
           overlay={
             <div className="px-6 pb-14 pt-24">
@@ -785,9 +778,9 @@ function DayBlock({
             <p className="mt-12 text-justify text-[15px] leading-[1.95] text-ink/78">{closing}</p>
           </div>
         </div>
-        <FullBleedPlaceholder variant="dark" minHeight="min-h-[56vh]" fileName={p2.file} />
+        <FullBleedPlaceholder variant="dark" minHeight="min-h-[68vh]" spLandscape fileName={p2.file} />
         <div className={isLast ? "pb-16" : ""}>
-          <FullBleedPlaceholder variant="dark" minHeight="min-h-[56vh]" fileName={p3.file} />
+          <FullBleedPlaceholder variant="dark" minHeight="min-h-[68vh]" spLandscape fileName={p3.file} />
         </div>
         {!isLast ? <div className="h-px w-full bg-white/10" /> : null}
       </div>

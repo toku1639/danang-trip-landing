@@ -42,6 +42,37 @@ body {
   max-width: 100vw;
 }
 
+/**
+ * FullBleedPlaceholder spLandscape 用（Tailwind の動的 lg:min-h がパージされ PC で高さ 0 になるのを防ぐ）
+ * max-width: 1023px = Tailwind の max-lg と同じ
+ */
+.fb-sp-55,
+.fb-sp-68,
+.fb-sp-72,
+.fb-sp-full {
+  width: 100%;
+}
+@media (max-width: 1023px) {
+  .fb-sp-55,
+  .fb-sp-68,
+  .fb-sp-72,
+  .fb-sp-full {
+    aspect-ratio: 4 / 3;
+    min-height: 0;
+  }
+}
+@media (min-width: 1024px) {
+  .fb-sp-55 {
+    min-height: 55vh;
+  }
+  .fb-sp-68 {
+    min-height: 68vh;
+  }
+  .fb-sp-72 {
+    min-height: 72vh;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
