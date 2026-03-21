@@ -1,4 +1,4 @@
-/* Not processed by Vite minify: keeps translate3d() at both keyframe ends for smooth interpolation. */
+/* translate3d() をキーフレーム両端で維持し、補間を滑らかにする */
 @keyframes strip-scroll {
   from {
     transform: translate3d(0, 0, 0);
