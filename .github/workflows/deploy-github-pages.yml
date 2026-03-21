@@ -1,3 +1,6 @@
+# リポジトリ Settings → Pages の Source は「GitHub Actions」のみにすること。
+# 「Deploy from a branch」だと未ビルドの index が配信され main.tsx / MIME エラーになる。
+
 name: Deploy to GitHub Pages
 
 on:
