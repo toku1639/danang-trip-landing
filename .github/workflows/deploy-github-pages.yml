@@ -1,7 +1,7 @@
-# リポジトリ Settings → Pages の Source は「GitHub Actions」のみにすること。
-# 「Deploy from a branch」だと未ビルドの index が配信され main.tsx / MIME エラーになる。
+# https://vitejs.dev/guide/static-deploy.html#github-pages
+# Settings → Pages の Source は「GitHub Actions」のみ。
 
-name: Deploy to GitHub Pages
+name: Deploy static content to Pages
 
 on:
   push:
@@ -15,30 +15,39 @@ permissions:
 
 concurrency:
   group: pages
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: npm
-      - run: npm ci
-      - run: npm run build
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: dist
-
   deploy:
-    needs: build
-    runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Build
+        run: npm run build
+      - name: Verify dist (no dev entry)
+        run: |
+          test -f dist/index.html
+          if grep -q 'main.tsx' dist/index.html; then
+            echo 'ERROR: dist/index.html still references main.tsx — build misconfigured'
+            exit 1
+          fi
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./dist
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
