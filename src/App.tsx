@@ -6,6 +6,14 @@ function displayPhotoFileName(fileName: string): string {
   return fileName.replace(/^vip-/i, "");
 }
 
+/** GitHub Pages 等のサブパス用。Vite の base（例: /danang-trip-landing/）を付与 */
+const ASSET_BASE = import.meta.env.BASE_URL;
+
+function publicImageSrc(fileName: string, preferImagesDir: boolean): string {
+  const name = fileName.replace(/^\//, "");
+  return preferImagesDir ? `${ASSET_BASE}images/${name}` : `${ASSET_BASE}${name}`;
+}
+
 function IconCamera({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
@@ -35,7 +43,8 @@ function PlaceholderFrame({
 }) {
   const [attempt, setAttempt] = useState(0);
   const [imgFailed, setImgFailed] = useState(false);
-  const src = fileName && !imgFailed ? (attempt === 0 ? `/images/${fileName}` : `/${fileName}`) : null;
+  const src =
+    fileName && !imgFailed ? (attempt === 0 ? publicImageSrc(fileName, true) : publicImageSrc(fileName, false)) : null;
 
   return (
     <div
@@ -113,7 +122,7 @@ function FullBleedPlaceholder({
   priority?: boolean;
   spLandscape?: boolean;
 }) {
-  /** 0: /images/name, 1: /name（public 直下） */
+  /** 0: images/name, 1: public 直下 */
   const [srcAttempt, setSrcAttempt] = useState(0);
   const [imgFailed, setImgFailed] = useState(false);
   const base =
@@ -122,7 +131,7 @@ function FullBleedPlaceholder({
       : "from-[#dfe6e9] via-sand to-[#cfd8dc]";
   const bleedCls = bleed ? "full-bleed" : "relative w-full";
   const heightCls = spLandscape ? (FB_SP_LANDSCAPE[minHeight] ?? minHeight) : minHeight;
-  const imgSrc = srcAttempt === 0 ? `/images/${fileName}` : `/${fileName}`;
+  const imgSrc = srcAttempt === 0 ? publicImageSrc(fileName, true) : publicImageSrc(fileName, false);
   return (
     <div className={`${bleedCls} relative ${heightCls} overflow-hidden ${className}`}>
       {!imgFailed ? (
@@ -221,7 +230,7 @@ function AreaNav({ active }: { active: number }) {
 function StripSlideCard({ fileName }: { fileName: string }) {
   const [attempt, setAttempt] = useState(0);
   const [imgFailed, setImgFailed] = useState(false);
-  const src = imgFailed ? null : attempt === 0 ? `/images/${fileName}` : `/${fileName}`;
+  const src = imgFailed ? null : attempt === 0 ? publicImageSrc(fileName, true) : publicImageSrc(fileName, false);
 
   return (
     <div className="relative h-[min(42vh,300px)] w-[min(88vw,520px)] shrink-0 overflow-hidden bg-gradient-to-br from-[#dfe6e9] via-sand to-[#cfd8dc]">
