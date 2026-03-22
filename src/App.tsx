@@ -233,7 +233,7 @@ function StripSlideCard({ fileName }: { fileName: string }) {
   const src = imgFailed ? null : attempt === 0 ? publicImageSrc(fileName, true) : publicImageSrc(fileName, false);
 
   return (
-    <div className="relative h-[min(42vh,300px)] w-[min(88vw,520px)] shrink-0 overflow-hidden bg-gradient-to-br from-[#dfe6e9] via-sand to-[#cfd8dc]">
+    <div className="relative h-[min(28vh,200px)] w-[min(68vw,360px)] shrink-0 overflow-hidden bg-gradient-to-br from-[#dfe6e9] via-sand to-[#cfd8dc] lg:h-[min(42vh,300px)] lg:w-[min(88vw,520px)]">
       {src ? (
         <img
           key={attempt}
@@ -250,7 +250,7 @@ function StripSlideCard({ fileName }: { fileName: string }) {
       ) : null}
       {imgFailed ? (
         <div className="absolute inset-0 z-[1] flex items-center justify-center">
-          <IconCamera className="h-14 w-14 text-navy/20 sm:h-20 sm:w-20" />
+          <IconCamera className="h-10 w-10 text-navy/20 sm:h-14 sm:w-14 lg:h-20 lg:w-20" />
         </div>
       ) : null}
       <div className="pointer-events-none absolute inset-0 z-[1] bg-[linear-gradient(145deg,rgba(255,255,255,0.35),transparent_45%)]" />
@@ -262,13 +262,7 @@ function StripSlideCard({ fileName }: { fileName: string }) {
  * ミキLP風：隙間なし横並び。
  * 横移動は **CSS**（`public/strip-animation.css` の `@keyframes strip-scroll`）による **自動・無限ループ**。
  */
-function AutoScrollPhotoStrip({
-  slides,
-  caption,
-}: {
-  slides: { fileName: string }[];
-  caption: string;
-}) {
+function AutoScrollPhotoStrip({ slides }: { slides: { fileName: string }[] }) {
   if (slides.length === 0) return null;
   const loop = [...slides, ...slides];
   return (
@@ -280,7 +274,6 @@ function AutoScrollPhotoStrip({
           ))}
         </div>
       </div>
-      <p className="mx-auto max-w-xl px-4 py-8 text-center text-sm leading-relaxed text-ink/70 sm:px-5">{caption}</p>
     </section>
   );
 }
@@ -357,7 +350,6 @@ export default function App() {
           { fileName: "vip-pool-strip-05.jpg" },
           { fileName: "vip-pool-strip-06.jpg" },
         ]}
-        caption="プールデッキのイメージ（6カットを横に流す）。リゾートの余裕と開放感。"
       />
 
       <ScrollReveal className="bg-cream">
