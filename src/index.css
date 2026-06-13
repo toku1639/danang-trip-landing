@@ -4,10 +4,21 @@
 
 html {
   scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
   font-family: "Noto Sans JP", system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.65;
+  line-break: strict;
+  overflow-wrap: break-word;
+}
+
+@media (min-width: 1024px) {
+  body {
+    font-size: 15px;
+  }
 }
 
 [data-reveal] {
@@ -53,11 +64,15 @@ body {
   width: 100%;
 }
 @media (max-width: 1023px) {
+  [data-reveal] {
+    transform: translateY(18px);
+  }
+
   .fb-sp-55,
   .fb-sp-68,
   .fb-sp-72,
   .fb-sp-full {
-    aspect-ratio: 4 / 3;
+    aspect-ratio: 16 / 10;
     min-height: 0;
   }
 }

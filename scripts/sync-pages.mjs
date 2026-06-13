@@ -24,4 +24,6 @@ if (!fs.existsSync(dist)) {
 fs.rmSync(docs, { recursive: true, force: true });
 fs.cpSync(dist, docs, { recursive: true });
 fs.writeFileSync(path.join(docs, ".nojekyll"), "");
-console.log("OK: docs/ を更新しました。コミット後、Pages のフォルダを /docs に設定してください。");
+// GitHub Pages: 直接 URL アクセス時も SPA にフォールバック
+fs.copyFileSync(path.join(docs, "index.html"), path.join(docs, "404.html"));
+console.log("OK: docs/ を更新しました（404.html 含む）。コミット後、Pages のフォルダを /docs に設定してください。");
