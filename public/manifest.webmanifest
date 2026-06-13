@@ -1,0 +1,24 @@
+{
+  "name": "豪遊旅 2026 — ダナン",
+  "short_name": "ダナン旅",
+  "description": "ダナン男3人旅 3泊4日の行程ガイド",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "icons": [
+    {
+      "src": "apple-touch-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
